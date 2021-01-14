@@ -279,16 +279,14 @@ static int gasket_map_pci_bar(struct gasket_dev *gasket_dev, int bar_num)
 	 * which is safely castable to ulong (which itself is the arg to
 	 * request_mem_region).
 	 */
-	data->phys_base =
-		(ulong)pci_resource_start(gasket_dev->pci_dev, bar_num);
+	data->phys_base = pci_resource_start(gasket_dev->pci_dev, bar_num);
 	if (!data->phys_base) {
 		dev_err(gasket_dev->dev, "Cannot get BAR%u base address\n",
 			bar_num);
 		return -EINVAL;
 	}
 
-	data->length_bytes =
-		(ulong)pci_resource_len(gasket_dev->pci_dev, bar_num);
+	data->length_bytes = pci_resource_len(gasket_dev->pci_dev, bar_num);
 	if (data->length_bytes < desc_bytes) {
 		dev_err(gasket_dev->dev,
 			"PCI BAR %u space is too small: %lu; expected >= %lu\n",

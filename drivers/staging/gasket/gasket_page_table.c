@@ -324,7 +324,7 @@ static void gasket_free_extended_subtable(struct gasket_page_table *pg_tbl,
 	pte->status = PTE_FREE;
 
 	/* Release the page table from the device */
-	writeq(0, slot);
+	gasket_writeq(0, slot);
 
 	if (pte->dma_addr)
 		dma_unmap_page(pg_tbl->device, pte->dma_addr, PAGE_SIZE,
@@ -414,7 +414,7 @@ int gasket_page_table_partition(struct gasket_page_table *pg_tbl,
 	pg_tbl->num_simple_entries = num_simple_entries;
 	pg_tbl->num_extended_entries =
 		pg_tbl->config.total_entries - num_simple_entries;
-	writeq(num_simple_entries, pg_tbl->extended_offset_reg);
+	gasket_writeq(num_simple_entries, pg_tbl->extended_offset_reg);
 
 	mutex_unlock(&pg_tbl->mutex);
 	return 0;
@@ -520,7 +520,7 @@ static int gasket_perform_mapping(struct gasket_page_table *pg_tbl,
 		dma_addr = (ptes[i].dma_addr + offset) | GASKET_VALID_SLOT_FLAG;
 
 		if (is_simple_mapping) {
-			writeq(dma_addr, &slots[i]);
+			gasket_writeq(dma_addr, &slots[i]);
 		} else {
 			((u64 __force *)slots)[i] = dma_addr;
 			/* Extended page table vectors are in DRAM,
@@ -600,7 +600,7 @@ static void gasket_perform_unmapping(struct gasket_page_table *pg_tbl,
 	for (i = 0; i < num_pages; i++) {
 		/* release the address from the device, */
 		if (is_simple_mapping || ptes[i].status == PTE_INUSE) {
-			writeq(0, &slots[i]);
+			gasket_writeq(0, &slots[i]);
 		} else {
 			((u64 __force *)slots)[i] = 0;
 			/* sync above PTE update before updating mappings */
@@ -884,7 +884,7 @@ static int gasket_alloc_extended_subtable(struct gasket_page_table *pg_tbl,
 
 	/* make the addresses available to the device */
 	dma_addr = (pte->dma_addr + pte->offset) | GASKET_VALID_SLOT_FLAG;
-	writeq(dma_addr, slot);
+	gasket_writeq(dma_addr, slot);
 
 	pte->status = PTE_INUSE;
 
@@ -1080,7 +1080,7 @@ void gasket_page_table_reset(struct gasket_page_table *pg_tbl)
 {
 	mutex_lock(&pg_tbl->mutex);
 	gasket_page_table_unmap_all_nolock(pg_tbl);
-	writeq(pg_tbl->config.total_entries, pg_tbl->extended_offset_reg);
+	gasket_writeq(pg_tbl->config.total_entries, pg_tbl->extended_offset_reg);
 	mutex_unlock(&pg_tbl->mutex);
 }
 

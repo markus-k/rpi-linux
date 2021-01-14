@@ -88,10 +88,10 @@ struct gasket_bar_data {
 	u8 __iomem *virt_base;
 
 	/* Physical base address. */
-	ulong phys_base;
+	resource_size_t phys_base;
 
 	/* Length of the mapping. */
-	ulong length_bytes;
+	resource_size_t length_bytes;
 
 	/* Type of mappable area */
 	enum mappable_area_type type;
@@ -575,17 +575,50 @@ gasket_get_ioctl_permissions_cb(struct gasket_dev *gasket_dev);
 const char *gasket_num_name_lookup(uint num,
 				   const struct gasket_num_name *table);
 
+/* 32bit compatibility  */
+static inline u64 gasket_readq(const volatile __iomem u64 *addr)
+{
+	u32 low, high;
+
+	low = readl(addr);
+	high = readl(addr + 1);
+
+	return low + ((u64)high << 32);
+}
+
+static inline void gasket_writeq(u64 value, volatile __iomem u64 *addr)
+{
+	writel(value, addr);
+	writel(value >> 32, addr + 1);
+}
+
+static inline u64 gasket_readq_relaxed(const volatile __iomem void *addr)
+{
+	u32 low, high;
+
+	low = readl_relaxed(addr);
+	high = readl_relaxed(addr + 4);
+
+	return low + ((u64)high << 32);
+}
+
+static inline void gasket_writeq_relaxed(u64 value, volatile __iomem void *addr)
+{
+	writel_relaxed(value, addr);
+	writel_relaxed(value >> 32, addr + 4);
+}
+
 /* Handy inlines */
 static inline ulong gasket_dev_read_64(struct gasket_dev *gasket_dev, int bar,
 				       ulong location)
 {
-	return readq_relaxed(&gasket_dev->bar_data[bar].virt_base[location]);
+	return gasket_readq_relaxed(&gasket_dev->bar_data[bar].virt_base[location]);
 }
 
 static inline void gasket_dev_write_64(struct gasket_dev *dev, u64 value,
 				       int bar, ulong location)
 {
-	writeq_relaxed(value, &dev->bar_data[bar].virt_base[location]);
+	gasket_writeq_relaxed(value, &dev->bar_data[bar].virt_base[location]);
 }
 
 static inline void gasket_dev_write_32(struct gasket_dev *dev, u32 value,
