@@ -942,7 +942,7 @@ do_map_region(const struct gasket_dev *gasket_dev, struct vm_area_struct *vma,
 	ulong bar_offset, virt_offset;
 	struct gasket_mappable_region region_to_map;
 	ulong phys_offset, map_length;
-	ulong virt_base, phys_base;
+	resource_size_t virt_base, phys_base;
 	int bar_index, ret;
 
 	ret = gasket_mm_vma_bar_offset(gasket_dev, vma, &bar_offset);

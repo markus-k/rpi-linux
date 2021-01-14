@@ -228,10 +228,10 @@ struct gasket_coherent_buffer {
 	u8 __iomem *virt_base;
 
 	/* Physical base address. */
-	ulong phys_base;
+	resource_size_t phys_base;
 
 	/* Length of the mapping. */
-	ulong length_bytes;
+	resource_size_t length_bytes;
 };
 
 /* Description of Gasket-specific permissions in the mmap field. */
@@ -597,34 +597,40 @@ const char *gasket_num_name_lookup(uint num,
 /* 32bit compatibility  */
 static inline u64 gasket_readq(const volatile __iomem u64 *addr)
 {
+	const volatile __iomem u32 *p = (const volatile __iomem u32 *)addr;
 	u32 low, high;
 
-	low = readl(addr);
-	high = readl(addr + 1);
+	low = readl(p);
+	high = readl(p + 1);
 
 	return low + ((u64)high << 32);
 }
 
 static inline void gasket_writeq(u64 value, volatile __iomem u64 *addr)
 {
-	writel(value, addr);
-	writel(value >> 32, addr + 1);
+	volatile __iomem u32 *p = (volatile __iomem u32 *)addr;
+
+	writel(value, p);
+	writel(value >> 32, p + 1);
 }
 
 static inline u64 gasket_readq_relaxed(const volatile __iomem void *addr)
 {
+	const volatile __iomem u32 *p = (const volatile __iomem u32 *)addr;
 	u32 low, high;
 
-	low = readl_relaxed(addr);
-	high = readl_relaxed(addr + 4);
+	low = readl_relaxed(p);
+	high = readl_relaxed(p + 1);
 
 	return low + ((u64)high << 32);
 }
 
 static inline void gasket_writeq_relaxed(u64 value, volatile __iomem void *addr)
 {
-	writel_relaxed(value, addr);
-	writel_relaxed(value >> 32, addr + 4);
+	volatile __iomem u32 *p = (volatile __iomem u32 *)addr;
+
+	writel_relaxed(value, p);
+	writel_relaxed(value >> 32, p + 1);
 }
 
 /* Handy inlines */
